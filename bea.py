@@ -1,48 +1,58 @@
 '''
-Very simple requests to retrieve BEA data
+BEA testing
+
 '''
 #!/usr/bin/env python
 
 import requests
-import time
-
+from key import BEA_Key
+import json
 class BEAUrl:
     def __init__(self):
-        '''presets'''
-        self.key_url = self.set_key()
+        self.bea_key = self.set_key()
         self.format = 'JSON'
-        self.url = self.build_bea_url()
+        self.params = self.set_bea_params_url()
+        self.format = self.set_format()
 
-    def set_key(self, key = '#PERSONAL_BEA_KEY'):
+    def __str__(self):
+        return self.params
+
+    def _bea_key(self):
+        bea_key = BEA_Key()
+        return bea_key.key
+
+    def set_key(self):
         '''set API key'''
-        self.key = key
-        key_url = f"&UserID={self.key}"
-        return key_url
+        return self._bea_key()
 
-    def get_datasets(self):
-        '''store datasets url piece'''
-        get_data_set_url = f"&method=GetDataSetList"
+    def set_bea_params_url(self):
+         bea_url = f'https://apps.bea.gov/api/data?&UserID={self.bea_key}&method=GETDATASETLIST&{self.format}'
+         return bea_url
+         '''build up an url for a request'''
 
-    def build_bea_url(self):
-        '''build up an url for a request'''
-        root_url = f"https://apps.bea.gov/api/data?"
-        method_url =f"method=GetParameterValues"
-        data_set_name = f"&datasetname=INTLSERVTRADE"
-        parameter_name =f"&ParameterName= TradeDirection"
-        built_url = root_url+self.key_url+method_url+data_set_name+parameter_name+self.format
-        # method=getparameterlist&datasetname=Regional&ResultFormat=JSON
-        return built_url
+    def set_format(self, format = 'JSON'):
+        formated = f'&ResultFormat={format}'
+        return str(formated)
+
+    def test_get(self):
+        url1 = f'https://apps.bea.gov/api/data?&UserID={self.bea_key}&method=GetParameterValues&datasetname=INTLSERVTRADE&ParameterName=TradeDirection&{self.format}'
+        url2 = f'https://apps.bea.gov/api/data/?&UserID={self.bea_key}&method=GetData&datasetname=Regional&TableName=CAINC1&LineCode=3&GeoFIPS=CA&Year=2018&{self.format}'
+        r = requests.get(url2)
+        data = r.json()
+        with open('test_data.txt', 'a') as file:
+            file.write(json.dumps(data, indent=4))
+        return json.dumps(data, indent=4)
 
     def get_bea_datasets(self):
         '''return the bea datasets available'''
         r = requests.get(self.url)
-        return r.json()
-
+        data = r.json()
 
 def main():
-    bea1 = BEAURL()
-    print(bea1.url)
-    bea1.get_bea_datasets()
+    bea1 = BEAUrl()
+    print(bea1,'\n')
+    data = bea1.test_get()
+    print(data)
 if __name__ == "__main__":
     main()
 
